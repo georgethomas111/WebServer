@@ -11,7 +11,7 @@ REQUIREMENTS
 A golang installation in the system.
 If not present. Please do 
 
-"sudo apt-get install go"
+`sudo apt-get install go`
 
 If not in ubuntu. 
 Checkout https://golang.org/doc/install
@@ -19,7 +19,7 @@ Checkout https://golang.org/doc/install
 RUNNING APPLICATION
 ===================
 
-go run server.go
+`go run server.go`
 
 The statement above starts a server instance that runs on port 8080. The instance can be accessed by hitting the ip address that exposes it.
 
@@ -27,5 +27,6 @@ SPOILERS
 ========
 
 * Firewalls that block 8080 can be a spoiler. 
-** Port Number currently hard-quoted in the code. Feel free to change as per your requirements.
+* Port Number currently hard-quoted in the code. Feel free to change as per your requirements.
+
 * Another server that is already running on the port. 
