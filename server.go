@@ -21,7 +21,7 @@ func ListFiles(w http.ResponseWriter, r *http.Request) {
 	files, err := ioutil.ReadDir(".")
 	if err == nil {
 		for _, file := range files {
-			fmt.Fprintf(w, "%s\n", file.Name())
+			fmt.Fprintf(w, "<a href='%s'>%s</a><br/>", file.Name(), file.Name())
 		}
 	} else {
 		fmt.Fprintf(w, "%s", err.Error())
