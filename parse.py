@@ -53,7 +53,6 @@ class CountryData(object):
 	self._lossCount = self._lossCount + 1
 	if playerLost not in self._players :
 		self._players[playerLost] = PlayerData(playerLost)
-		self._json["Players"].append(self._players[playerLost].getJsonAble())
 	self._players[playerLost].addLoss()
 
 
@@ -63,6 +62,7 @@ class CountryData(object):
     def finalyze(self) :
 	if self._lossCount != 0 : 
 	    self._victLossRatio = self._victCount/ self._lossCount
+	self._json["PlayerCount"] = len(self._players)
 	for key in self._players :
 	    self._players[key].finalyze()
 	    self._json["Players"].append(self._players[key].getJsonAble())
