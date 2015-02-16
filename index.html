@@ -1,0 +1,127 @@
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="css/lab1.css">
+	<!-- 
+	   <script src="js/parse.js" type="text/javascript"></script>
+	-->    
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(myStart);
+
+    function drawSeriesChart(arrData) {
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'ID');
+      data.addColumn('number', 'Winners');
+      data.addColumn('number', 'Errors');
+      data.addColumn('string', 'won');
+      data.addColumn('number', 'SetsPlayed');
+      for(var i = 0; i < arrData.length; i++) {
+          data.addRow([arrData[i].year, arrData[i].winners, arrData[i].errors, arrData[i].won, arrData[i].setsPlayed]);
+      }
+
+      var options = {
+        title: 'How does number of winners and errors matter in Australian open finals?',
+        hAxis: {title: 'Winners'},
+        vAxis: {title: 'Errors'},
+	sortBubblesBySize: true,
+	chartArea: {
+		width : '80%',
+		height : '85%'
+		},
+	titlePosition : 'in',
+        bubble: {
+		textStyle: {
+			fontSize: 11
+			},
+		opacity: 0.6
+		}
+      };
+
+      var chart = new google.visualization.BubbleChart(document.getElementById('series_chart_div'));
+      var my_div = document.getElementById('get_png'); 
+      google.visualization.events.addListener(chart, 'ready', function () {
+      		my_div.innerHTML = '<a href="' + chart.getImageURI() + '">ViewPng </a>';
+    	});	
+
+      chart.draw(data, options);
+    }
+
+function loadFile(path, openHandler, errorHandler) {
+    var xhr = new XMLHttpRequest();
+    var success = false;
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                openHandler(xhr.responseText);
+            } else {
+                if (error)
+                    error(xhr);
+            }
+        }
+    };
+    xhr.open("GET", path, true);
+    xhr.send();
+}
+
+var Point = function (year, winners, errors, setsPlayed, won) {
+	
+	var pIns = {};
+	pIns.year = year;
+	pIns.winners = parseInt(winners);
+	pIns.errors = parseInt(errors);
+	if(won == "won") {
+		pIns.setsPlayed = 8 - parseInt(setsPlayed);
+	} else {
+		
+		pIns.setsPlayed = 8 - parseInt(setsPlayed);
+		// Idea is to show the magnitude of victory and failure
+	}
+	pIns.won = won.toString();
+	return pIns
+}
+
+function openHandler(textInput) {
+	var lines = textInput.split(/\r\n|\n/);
+	var headings = lines[0].split(',')
+        var yearIndex = 0;
+	var winnerWinners = 27 
+	var loserWinners = 28
+	var winnerError = 29 
+	var loserError = 30 
+	var resultIndex = 34
+	
+	var myPoints = [];
+	var nullPoint = Point('', 0, 0, 0, "won");
+	nullPoint.setsPlayed = 2;
+	myPoints.push(nullPoint);
+	for(var i = 1; i < 11 ; i++) {
+		rowData = lines[i].split(',');
+		setsPlayed = rowData[resultIndex].split(' ').length
+		var winPoint = Point(rowData[yearIndex], rowData[winnerWinners], rowData[winnerError], setsPlayed, "won");
+		var loserPoint = Point(rowData[yearIndex], rowData[loserWinners], rowData[loserError], setsPlayed, "lost");
+		myPoints.push(winPoint);
+		myPoints.push(loserPoint);
+	}
+	console.log(myPoints);
+	drawSeriesChart(myPoints);
+}
+
+function errorHandler() {
+	console.log("Error found");
+}
+
+function myStart() {
+	console.log("In start");
+	loadFile('aus.csv', openHandler, errorHandler);
+}
+
+    </script>
+</head>
+
+<body onload="myStart();">
+<div id="series_chart_div" style="width: 900px; height: 500px;"></div>
+<div id="get_png"></div>
+</body>
+
+</html>
