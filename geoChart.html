@@ -1,0 +1,243 @@
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="css/lab1.css">
+	<!-- 
+	   <script src="js/parse.js" type="text/javascript"></script>
+	-->    
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+    google.load("visualization", "1", {packages:["geochart"]});
+    google.setOnLoadCallback(myStart);
+
+    function callD3(countryObj) {
+		var position = Position(16, 5, 300, 400, "Players", "SuccessFactor");
+		var points = [];
+		for(var i = 0; i < countryObj.Players.length; i++) {
+			console.log(countryObj.Players[i]);
+			points.push(Point(i, countryObj.Players[i].Ratio, 1, countryObj.Players[i].PlayerName))
+		}
+		start(position, points);
+    }
+
+    function drawSeriesChart(jsonObj) {
+      var data = new google.visualization.DataTable();
+      var countryMap = {};
+
+      data.addColumn('string', 'Country');
+      data.addColumn('number', 'SuccessFactor');
+      data.addColumn('number', 'PlayerCount');
+   //   console.log(Object.keys(jsonObj["GeoData"]));
+      for(var country in jsonObj["GeoData"]) {
+            console.log(jsonObj["GeoData"][country].CountryName);
+	    var ExtraData = {
+		playerCount : jsonObj["GeoData"][country].PlayerCount,
+		country     : country,
+	    }
+	    data.addRow([jsonObj["GeoData"][country].CountryName, jsonObj["GeoData"][country].Ratio, jsonObj["GeoData"][country].PlayerCount])
+	    countryMap[jsonObj["GeoData"][country].CountryName] = country;
+      }
+
+      var options = {
+	colorAxis: {colors: ['violet', 'green']},
+//	displayMode : 'markers'
+      };
+
+      var chart = new google.visualization.GeoChart(document.getElementById('series_chart_div'));
+
+      google.visualization.events.addListener(chart, 'select', function() {
+ 	 var selection = chart.getSelection()[0];
+	 var key = data.getValue(selection.row, 0);
+ 	 console.log(countryMap[key]);
+	 console.log("Corresponding data", jsonObj["GeoData"][countryMap[key]]);
+	 callD3(jsonObj["GeoData"][countryMap[key]]);
+	});
+
+      var selection = chart.getSelection(); 
+
+      chart.draw(data, options);
+    }
+
+function loadFile(path, openHandler, errorHandler) {
+    var xhr = new XMLHttpRequest();
+    var success = false;
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                openHandler(JSON.parse(xhr.responseText));
+            } else {
+                if (error)
+                    error(xhr);
+            }
+        }
+    };
+    xhr.open("GET", path, true);
+    xhr.send();
+}
+
+function openHandler(jsonObj) {
+        console.log(jsonObj);
+	drawSeriesChart(jsonObj);
+}
+
+function errorHandler() {
+	console.log("Error found");
+}
+
+function myStart() {
+	console.log("In start");
+	loadFile('11year.json', openHandler, errorHandler);
+}
+    </script>
+
+	<style>
+		body {
+		 	font: 10px sans-serif;
+		}
+		.axis path,
+		.axis line {
+			 fill: none;
+			 stroke: #000;
+			 shape-rendering: crispEdges;
+		}
+		.dot {
+			 stroke: #000;
+		}
+	</style>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+
+    <script>
+
+		// Position, Points
+		// Position -> xmax, ymax, width, height
+		// Points -> x, y, magnitude, name 
+
+		var Point = function(x, y, magnitude, name) {
+			return {
+				x : x,
+				y : y,
+				magnitude : magnitude,
+				name : name
+			}
+		}	
+
+		var Position = function(xmax, ymax, width, height, xLabel, yLabel) {
+			var pos = {}
+			pos.xmax = xmax;
+			pos.ymax = ymax;
+			pos.width = width;
+			pos.height = height;
+			pos.xLabel = xLabel;
+			pos.yLabel = yLabel;
+			return pos;
+}
+				
+		function drawGraph(data, x, y, height, width, color, xAxis, yAxis, svg) {
+			console.log(data);
+			data.forEach(function(d) {
+					d.x = +d.x;
+					d.y = +d.y;
+					d.magnitude = +d.magnitude;
+					}
+				    );
+			x.domain(d3.extent(data, function(d) { return d.x; })).nice();
+			y.domain(d3.extent(data, function(d) { return d.y; })).nice();
+			svg.append("g")
+				.attr("class", "x axis")
+				.attr("transform", "translate(0," + height + ")")
+				.call(xAxis)
+				.append("text")
+				.attr("class", "label")
+				.attr("x", width)
+				.attr("y", -6)
+				.style("text-anchor", "end")
+				.text(position.xLabel);
+			svg.append("g")
+				.attr("class", "y axis")
+				.call(yAxis)
+				.append("text")
+				.attr("class", "label")
+				.attr("transform", "rotate(-90)")
+				.attr("y", 6)
+				.attr("dy", ".71em")
+				.style("text-anchor", "end")
+				.text(position.yLabel);
+
+			svg.selectAll(".dot")
+				.data(data)
+				.enter().append("circle")
+				.attr("class", "dot")
+				.attr("r", 5)
+				.attr("cx", function(d) { return x(d.x); })
+				.attr("cy", function(d) { return y(d.y); })
+				.style("fill", function(d) { return color(d.magnitude); });
+				
+			var legend = svg.selectAll(".legend")
+				.data(color.domain())
+				.enter().append("g")
+				.attr("class", "legend")
+				.attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+			legend.append("rect")
+				.attr("x", width - 18)
+				.attr("width", 18)
+				.attr("height", 18)
+				.style("fill", color);
+			legend.append("text")
+				.attr("x", width - 24)
+				.attr("y", 9)
+				.attr("dy", ".35em")
+				.style("text-anchor", "end")
+				.text(function(d) { return d.name; });
+		}
+
+		function start(position, points) {
+			console.log("Started");
+
+			var margin = {top: 20, right: 20, bottom: 30, left: 40},
+			    width = position.width - margin.left - margin.right,
+			    height = position.height - margin.top - margin.bottom;
+			var x = d3.scale.linear()
+				.range([0, width]);
+			var y = d3.scale.linear()
+				.range([height, 0]);
+
+			//https://github.com/mbostock/d3/wiki/Ordinal-Scales
+
+			var color = d3.scale.category10();
+			var xAxis = d3.svg.axis()
+				.scale(x)
+				.orient("bottom");
+			var yAxis = d3.svg.axis()
+				.scale(y)
+				.orient("left");
+			var svg = d3.select("body").append("svg")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height + margin.top + margin.bottom)
+				.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			drawGraph(points, x, y, height, width, color, xAxis, yAxis, svg);
+/*			d3.tsv("tennis.tsv", function(error, data) {
+			drawGraph(data, x, y, height, width, color, xAxis, yAxis, svg)
+				});
+*/
+
+		}		
+
+</script>
+
+</head>
+
+<body>
+<div id="zoom"> 
+
+		<script>
+		var position = Position(16, 5, 300, 400, "Players", "SuccessFactor");
+		var points = [];
+		points.push(Point(1, 2, 10, "1st Entry"));
+		points.push(Point(2, 3, 11, "2nd Entry"));
+		start(position, points);
+		</script>
+</div>
+<div id="series_chart_div" style="width: 900px; height: 500px;"></div>
+<div id="get_png"></div>
+</body>
+</html>
