@@ -17,6 +17,7 @@
 			points.push(Point(i, countryObj.Players[i].Ratio, 1, countryObj.Players[i].PlayerName))
 		}
 		start(position, points);
+		d3.select("#myGraph").remove();
     }
 
     function drawSeriesChart(jsonObj) {
@@ -171,22 +172,6 @@ function myStart() {
 				.attr("cy", function(d) { return y(d.y); })
 				.style("fill", function(d) { return color(d.magnitude); });
 				
-			var legend = svg.selectAll(".legend")
-				.data(color.domain())
-				.enter().append("g")
-				.attr("class", "legend")
-				.attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
-			legend.append("rect")
-				.attr("x", width - 18)
-				.attr("width", 18)
-				.attr("height", 18)
-				.style("fill", color);
-			legend.append("text")
-				.attr("x", width - 24)
-				.attr("y", 9)
-				.attr("dy", ".35em")
-				.style("text-anchor", "end")
-				.text(function(d) { return d.name; });
 		}
 
 		function start(position, points) {
@@ -209,9 +194,10 @@ function myStart() {
 			var yAxis = d3.svg.axis()
 				.scale(y)
 				.orient("left");
-			var svg = d3.select("body").append("svg")
+			var svg = d3.select("#zoom").append("svg")
 				.attr("width", width + margin.left + margin.right)
 				.attr("height", height + margin.top + margin.bottom)
+				.attr("id", "myGraph")
 				.append("g")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 			drawGraph(points, x, y, height, width, color, xAxis, yAxis, svg);
@@ -227,17 +213,21 @@ function myStart() {
 </head>
 
 <body>
-<div id="zoom"> 
-
+<h1> How does the performance in Australian open vary with the different regions in the world? </h1>
+<h3> Click on a country to understand the variation in performance of the different players within a country in the zoomer. </h3>
+<h4> Succes Factor of a Player => Total Number of Wins/Total Number of Loses of the player.</h4>
+<h4> Succes Factor of a Country => Total Number of Wins of All the Players/Total Number of Loses of All the Players </h4>
+<div style="width:100%; height:100%;">
+	
+	<div id="series_chart_div" style="width: 60%; height: 100%; float:left;"></div>
+	<div id="zoom" style="width:40%; height: 100%; float:right; text-align:center;"> 
+	<h2 align=centre> Zoomer </h2>
 		<script>
 		var position = Position(16, 5, 300, 400, "Players", "SuccessFactor");
 		var points = [];
-		points.push(Point(1, 2, 10, "1st Entry"));
-		points.push(Point(2, 3, 11, "2nd Entry"));
 		start(position, points);
 		</script>
+	</div>
 </div>
-<div id="series_chart_div" style="width: 900px; height: 500px;"></div>
-<div id="get_png"></div>
 </body>
 </html>
